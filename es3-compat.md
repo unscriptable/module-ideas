@@ -277,3 +277,12 @@ var module = (function () {
 	function resolveModule (name) { /* ... */ }
 }());
 ```
+
+I think it's optimal to place the dependencies at the bottom, rather than the
+top.  The only advantage to having `imports` at the top are to gain an insight
+into what interfaces each imported thing supports.  This is less meaningful in
+Javascript.  With the dependencies at the bottom, the dev can review the code
+at a high level before diving down into the deeper dependencies.
+
+
+

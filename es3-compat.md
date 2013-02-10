@@ -219,8 +219,61 @@ module(
 ```
 
 This isn't a complete answer.  Devs could still programmatically decorate the 
-thing labeled by `export:`.
+thing labeled by `export:`.  But it seems that the ES6 syntaxes can't prevent
+this fully, either?
 
 Also: how to declare imports declaratively?
 
+```js
+// formal syntax:
+// module ["name"] factory, ["dep1" [, "dep2" [, ... ]]];
+module "myModule" function (ack, bar) {
+	console.log(this); // undefined
+	export function () {
+		return ack('foo') ? 'foo' : bar('foo');
+	};
+}, "./ack", "other/bar";
 
+// back-compat syntax
+module ("myModule") (function (ack) {
+	console.log(this); // undefined
+	return "export", function () {
+		return ack('foo') ? 'foo' : 'bar';
+	};
+}) ("./ack", "other/bar");
+
+// possible syntax for exporting a simple object
+module "mySimpleModule" {
+	answer: 42,
+	question: "What is the meaning of life...blah?"
+};
+
+// back-compat syntax for exporting a simple object
+module ("mySimpleModule") ({
+	answer: 42,
+	question: "What is the meaning of life...blah?"
+});
+```
+
+The back-compat syntax would allow a shim to be created:
+
+```js
+var module = (function () {
+"use strict";
+	var globalCache = {};
+	return function module (name) {
+		return function (factory) {
+			// TODO: support simple object syntax, too?
+			return function (/*deps...*/) {
+				// serious oversimplification (e.g. ignores async):
+				var modules = [], deps = Array.prototype.slice(arguments);
+				deps.forEach(function (depname) {
+					modules.push(resolveModule(depname));
+				});
+				globalCache[name] = factory.apply(null, modules);
+			};
+		};
+	}
+	function resolveModule (name) { /* ... */ }
+}());
+```

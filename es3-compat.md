@@ -284,5 +284,22 @@ into what interfaces each imported thing supports.  This is less meaningful in
 Javascript.  With the dependencies at the bottom, the dev can review the code
 at a high level before diving down into the deeper dependencies.
 
+This proposed syntax doesn't allow for the following ES6-style feature:
 
+`import A from "./ack";`
 
+To be honest, I'd be happy with `var` or `let` statements. We've got dead code 
+removal from Google Closure Compiler and UglifyJS, so this should be efficient:
+
+```js
+// import A from "./ack"; import B from "other/bar";
+module "myModule" function (ack, bar) {
+	var A = ack.A, B = bar.B;
+	export {
+		whatevs: 42
+	};
+}, "./ack", "other/bar";
+```
+
+I'm probably missing some other reason we'd want to import only a portion of 
+another module.  Somebody help me out.  What am I missing?

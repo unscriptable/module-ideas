@@ -183,7 +183,7 @@ module(
 
 Unfortunately, this doesn't force declarative syntax, which allows devs to 
 write crazy shiz like the following which prevents compilers from doing satic
-analysis (well, doesn't *prevent* them, but makes it much harder):
+analysis:
 
 ```js
 var myDeps, myLoader;
@@ -219,8 +219,8 @@ module(
 ```
 
 This isn't a complete answer.  Devs could still programmatically decorate the 
-thing labelled by `export:`.
+thing labeled by `export:`.
 
-Also: how do declare imports declaratively?
+Also: how to declare imports declaratively?
 
 

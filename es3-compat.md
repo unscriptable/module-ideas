@@ -385,6 +385,10 @@ module ("myModule") (function (ack, bar) {
 }) (["./ack", "other/bar"]);
 ```
 
-Dang, stoopid devs create circular dependencies, that's why.
+Dang, stoopid devs create circular dependencies, that's why. 
+The only way to allow circular deps is to use `exports` (but not 
+`module.exports = ...`).
 
+Screw it, why not just say that circular deps aren't allowed in the back-
+compat syntax?  In the formal syntax, we could allow use of `exports`.
 

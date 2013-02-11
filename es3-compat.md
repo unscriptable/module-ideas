@@ -209,6 +209,7 @@ static analyzer could find?
 module(
 	function (ack) {
 		console.log(this); // undefined
+		// using a label to flag exports
 		export: return function () {
 			return ack('foo') ? 'foo' : 'bar';
 		};
@@ -218,11 +219,14 @@ module(
 );
 ```
 
-This isn't a complete answer.  Devs could still programmatically decorate the 
+This is not a complete answer.  Devs could still programmatically decorate the
 thing labeled by `export:`.  But it seems that the ES6 syntaxes can't prevent
-this fully, either?
+this fully, either?  Also: `export` is a reserved word.
 
 Also: how to declare imports declaratively?
+
+What if there were a syntax that could be made to be ES3/5 compatible just by
+adding parentheses, commas, braces, and/or other operators?
 
 ```js
 // formal syntax:
@@ -240,7 +244,7 @@ module ("myModule") (function (ack) {
 	return "export", function () {
 		return ack('foo') ? 'foo' : 'bar';
 	};
-}) ("./ack", "other/bar");
+}, "./ack", "other/bar");
 
 // possible syntax for exporting a simple object
 module "mySimpleModule" {
@@ -288,8 +292,7 @@ This proposed syntax doesn't allow for the following ES6-style feature:
 
 `import A from "./ack";`
 
-To be honest, I'd be happy with `var` or `let` statements. We've got dead code 
-removal from Google Closure Compiler and UglifyJS, so this should be efficient:
+To be honest, I'd be happy with `var` or `let` statements:
 
 ```js
 // import A from "./ack"; import B from "other/bar";
@@ -301,5 +304,87 @@ module "myModule" function (ack, bar) {
 }, "./ack", "other/bar";
 ```
 
-I'm probably missing some other reason we'd want to import only a portion of 
-another module.  Somebody help me out.  What am I missing?
+We've got dead code removal from Google Closure Compiler and UglifyJS, so we 
+shouldn't be worried about unused bits of the modules wasting space.  
+
+I'm probably missing some other reason why destructuring the imports is so 
+important.  What am I missing?
+
+```js
+// this is virtually AMD-wrapped CJSM without the function wrapper
+module "myModule" {
+	var A = import "./ack";
+	var B = import "other/bar";
+	export {
+		whatevs: 42
+	};
+};
+
+// back-compat needs the `import` and `export` in the function wrapper or else 
+// the `import()` function and `export()` function must be global which can
+// work (in all cases?) if their context is switched when `module()` executes.
+module ("myModule") (function () { 
+	var A = import ("./ack");
+	var B = import ("other/bar");
+	export ({
+		whatevs: 42
+	});
+});
+```
+
+This can't work unless the functions are scanned for instances of `import`.
+So, we're no better than the AMD-wrapped CJS case. *Dependencies must be listed
+outside of the factory or else the factory source must be scanned.* Still, this
+is a potential solution as long as we can prove that the developer can't do 
+anything to coerce an `import()` or `export()` to execute in the wrong context.
+For instance, could the developer export a function that has an `import()`
+that then runs in the context of another module?  Need to think about this a
+bit more to know if we can prevent this type of "mistake".
+
+Argghh, except for the fact that `export` and `import` are reserved words.
+
+Now we're back to `exports` and `require`!
+
+Another variant:
+
+```js
+// using `exports` instead of `export`
+module "myModule" function (ack, bar) {
+	console.log(this); // undefined
+	exports function () {
+		return ack('foo') ? 'foo' : bar('foo');
+	};
+} ["./ack", "other/bar"];
+
+// back-compat syntax
+module ("myModule") (function (ack) {
+	console.log(this); // undefined
+	exports: return function () {
+		return ack('foo') ? 'foo' : 'bar';
+	};
+})(["./ack", "other/bar"]);
+```
+
+Why can't we just return the exported module?
+
+```js
+// using `exports` instead of `export`
+module "myModule" function (ack, bar) {
+	console.log(this); // undefined
+	return function () {
+		return ack('foo') ? 'foo' : bar('foo');
+	};
+} ["./ack", "other/bar"];
+
+// back-compat (nothing changes inside factory)
+module ("myModule") (function (ack, bar) {
+	console.log(this); // undefined
+	return function () {
+		return ack('foo') ? 'foo' : bar('foo');
+	};
+}) (["./ack", "other/bar"]);
+```
+
+Dang, stoopid devs create circular dependencies, that's why.
+
+

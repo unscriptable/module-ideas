@@ -5,7 +5,7 @@ an "alternative" format?  The alternative format wouldn't have all of the same
 features as the formal syntax, but could be "good enough" to be interoperable.
 
 Given the following "formal" syntax  -- *yes, yes, I know this isn't conformant
-to the latest ES6 proposal! It's a **minimal** syntax. The elaborate syntax of
+to the latest ES6 proposal! It's a _minimal_ syntax. The elaborate syntax of
 the actual ES6 proposal is way too rich for this experiment to work.*
 
 Anyways, given the following *formal* syntax:

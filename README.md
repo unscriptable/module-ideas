@@ -15,7 +15,7 @@ module "myModule" {
 Can we also have an "alternative" format that works in ES3/5?
 
 This format would not be as robust, of course.  If devs attempt to use variabes
-in `require()` or deference these functions, their code will break in ES6.
+in `require()` or reassign these functions, their code will break in ES6.
 
 ```js
 // ModuleDeclaration ::= "module" ["("] [StringLiteral] [")"] ["("] ModuleFactory [")"]

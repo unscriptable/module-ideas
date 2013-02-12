@@ -1,3 +1,8 @@
+*Note: this is just a thought experiment.*  How easy/hard would it be to create
+a module syntax that had an alternative syntax that devs could use today, but
+-- more importantly -- could also be assimilated by ES6 VMs in the future as
+an "alternative" format?  The alternative format wouldn't have all of the same
+features as the formal syntax, but could be "good enough" to be interoperable.
 
 Given the following "formal" syntax:
 
@@ -23,8 +28,8 @@ in `require()` or reassign these functions, their code will break in ES6.
 // ModuleFactoryParameterList ::= "(" [ "require" [ "," "exports" ] ] ")"
 // ModuleFactoryBody ::= ModuleFactoryStatement ( ";" ModuleFactoryStatement )*
 // ModuleFactoryStatement ::= ModuleFactoryImport | ModuleFactoryExport | <otherJsStuff>
-// ModuleFactoryImport ::= "require"["("] StringLiteral [")"]
-// ModuleFactoryExport ::= "exports"["("] StringLiteral [")"]
+// ModuleFactoryImport ::= "require" ["("] StringLiteral [")"]
+// ModuleFactoryExport ::= "exports" ["("] StringLiteral [")"]
 module ("myModule") (function (require, exports) {
 	var ack = require("./ack");
 	var bar = require("other/bar");

@@ -2,22 +2,33 @@
 Given the following "formal" syntax:
 
 ```js
-// module ["name"] factory [,] "[" ["dep1" [, "dep2" [, ... ]]] "]";
-module "myModule" function (ack, bar) {
+// ModuleDeclaration ::= "module" [StringLiteral] "{" ModuleBody "}"
+module "myModule" {
+	var ack = import "./ack";
+	var bar = import "other/bar";
 	export function () {
 		return ack('foo') ? 'foo' : bar('foo');
 	};
-} ["./ack", "other/bar"];
+}
 ```
 
-Cn we also have an "alternative" format that works in ES3/5?
+Can we also have an "alternative" format that works in ES3/5?
 
 ```js
-module ("myModule") (function (ack, bar) {
-	return "export", function () {
+// ModuleDeclaration ::= "module" ["("] [StringLiteral] [")"] ["("] ModuleFactory [")"]
+// ModuleFactory ::= "function" ModuleFactoryParameterList "{" ModuleFactoryBody "}"
+// ModuleFactoryParameterList ::= "(" [ "require" [ "," "exports" ] ] ")"
+// ModuleFactoryBody ::= ModuleFactoryStatement ( ";" ModuleFactoryStatement )*
+// ModuleFactoryStatement ::= ModuleFactoryImport | ModuleFactoryExport | <otherJsStuff>
+// ModuleFactoryImport ::= "require"["("] StringLiteral [")"]
+// ModuleFactoryExport ::= "exports"["("] StringLiteral [")"]
+module ("myModule") (function (require, exports) {
+	var ack = require("./ack");
+	var bar = require("other/bar");
+	exports(function () {
 		return ack('foo') ? 'foo' : bar('foo');
-	};
-}) (["./ack", "other/bar"]);
+	});
+});
 ```
 
 This alternative syntax could be "shimmed" for ES3/5 environs:
@@ -28,15 +39,17 @@ var module = (function () {
 	var globalCache = {};
 	return function module (name) {
 		return function (factory) {
-			// TODO: support simple object syntax, too?
-			return function (/*deps...*/) {
-				// serious oversimplification (e.g. ignores async):
-				var modules = [], deps = Array.prototype.slice(arguments);
-				deps.forEach(function (depname) {
-					modules.push(resolveModule(depname));
-				});
-				globalCache[name] = factory.apply(null, modules);
-			};
+			// scan factory.toString() for `require`.
+			// note: this is the hairy part unless devs follow the "static analysis rules"
+			var deps = parse(factory.toString());
+			// serious oversimplification! (e.g. ignores async and lots of other stuff):
+			var modules = deps.map(function (depname) {
+				return resolveModule(depname);
+			});
+			var require = createRequire(modules);
+			var exports = createExports(name);
+			// store something in the cache that can be executed when require()d
+			globalCache[name] = { factory: factory.call(null, require, exports) };
 		};
 	}
 	function resolveModule (name) { /* ... */ }

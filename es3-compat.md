@@ -392,3 +392,21 @@ The only way to allow circular deps is to use `exports` (but not
 Screw it, why not just say that circular deps aren't allowed in the back-
 compat syntax?  In the formal syntax, we could allow use of `exports`.
 
+Ok, why not just use CJSM as the basis of the back-compat syntax:
+
+```js
+module "myModule" {
+	var ack = import "./ack";
+	export function () {
+		return ack('foo') ? 'foo' : bar('foo');
+	};
+}
+
+// back-compat. export and import functions are injected
+module ("myModule") (function (_export, _import) {
+	var ack = _import("./ack");
+	_export(function () {
+		return ack('foo') ? 'foo' : bar('foo');
+	});
+});
+```
